@@ -30,9 +30,9 @@ func linearSearch[S ~[]E, E, T any](s S, tgt T, cmp func(e E, t T) int) int {
 }
 
 func sizes() iter.Seq[int] {
-	return xiter.Concat(
+	return xiter.Merge(
 		xiter.Map(func(i int) int { return i * 5 }, hiter.Range(1, 5)),
-		slices.Values([]int{32, 64, 128, 256, 512, 1024, 2048}),
+		xiter.Map(func(i int) int { return 1 << i }, hiter.Range(1, 12)),
 	)
 }
 
@@ -209,13 +209,34 @@ func Benchmark_deque_merge_sort_slice_conversion(b *testing.B) {
 		b.ResetTimer()
 		deque_merge_sort(b, bigStructs, func(i, j bigStruct) int { return cmp.Compare(i.Key, j.Key) })
 	})
+
+	starBigStructs := make([]*bigStruct, 2048)
+	for i := range 2048 {
+		starBigStructs[i] = &bigStruct{
+			Key: hiter.StringsCollect(4*8*2, xiter.Limit(randStr(), 8)),
+		}
+	}
+
+	b.Run("[]*bigStruct", func(b *testing.B) {
+		b.ResetTimer()
+		deque_merge_sort(
+			b,
+			starBigStructs,
+			func(i, j *bigStruct) int {
+				if i == nil {
+					return -1
+				}
+				return cmp.Compare(i.Key, j.Key)
+			},
+		)
+	})
 }
 
 func deque_merge_sort[T any](b *testing.B, input []T, cmp func(l T, r T) int) {
 	for i := range sizes() {
-		d := deque.New[T](i)
-		for num := range xiter.Limit(slices.Values(input), i) {
-			d.PushBack(num)
+		d := deque.New[T]()
+		for ele := range xiter.Limit(slices.Values(input), i) {
+			d.PushBack(ele)
 		}
 		b.Run(fmt.Sprintf("%02d", i), func(b *testing.B) {
 			b.Run("slice_version", func(b *testing.B) {
