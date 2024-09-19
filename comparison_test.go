@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/gammazero/deque"
-	"github.com/ngicks/go-iterator-helper/collection"
 	"github.com/ngicks/go-iterator-helper/hiter"
 	"github.com/ngicks/go-iterator-helper/x/exp/xiter"
 	"rsc.io/omap"
@@ -255,7 +254,7 @@ func deque_merge_sort[T any](b *testing.B, input []T, cmp func(l T, r T) int) {
 					s[i] = d.At(i)
 				}
 				for range b.N {
-					ok := slices.IsSortedFunc(slices.Collect(collection.MergeSortFunc(s, cmp)), cmp)
+					ok := slices.IsSortedFunc(slices.Collect(hiter.MergeSortFunc(s, cmp)), cmp)
 					if !ok {
 						panic("eh")
 					}
@@ -269,7 +268,7 @@ func deque_merge_sort[T any](b *testing.B, input []T, cmp func(l T, r T) int) {
 				}
 				for range b.N {
 					var prev T
-					for n := range collection.MergeSortFunc(s, cmp) {
+					for n := range hiter.MergeSortFunc(s, cmp) {
 						if cmp(prev, n) > 0 {
 							panic("oh?")
 						}
@@ -280,7 +279,7 @@ func deque_merge_sort[T any](b *testing.B, input []T, cmp func(l T, r T) int) {
 			b.Run("no_conversion", func(b *testing.B) {
 				b.ResetTimer()
 				for range b.N {
-					ok := slices.IsSortedFunc(slices.Collect(collection.MergeSortSliceLikeFunc(d, cmp)), cmp)
+					ok := slices.IsSortedFunc(slices.Collect(hiter.MergeSortSliceLikeFunc(d, cmp)), cmp)
 					if !ok {
 						panic("eh")
 					}
